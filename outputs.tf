@@ -7,12 +7,12 @@ output "node_private_ips" {
 }
 
 output "node_names" {
-  value = "${azurerm_virtual_machine.vm.*.name}"
+  value = "${split(",", var.data_disk == "true" ? join(",", azurerm_virtual_machine.vmdd.*.name) : join(",", azurerm_virtual_machine.vm.*.name))}"
 }
 
 output "vm_ids" {
   description = "Virtual machine ids created."
-  value       = "${azurerm_virtual_machine.vm.*.id}"
+  value       = "${split(",", var.data_disk == "true" ? join(",", azurerm_virtual_machine.vmdd.*.id) : join(",", azurerm_virtual_machine.vm.*.id))}"
 }
 
 output "availability_set_id" {

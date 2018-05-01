@@ -35,6 +35,10 @@ variable "vm_size" {
   description = "Azure VM Size to use. See: https://docs.microsoft.com/en-us/azure/cloud-services/cloud-services-sizes-specs"
   default = "Standard_B2s"
 }
+variable "os_disk_size_gb" {
+  description = "(Optional) Specifies the size of the os disk in gigabytes. Default 32 GB"
+  default = "32"
+}
 variable "admin_public_key" {
   description = "Optionally supply the admin public key. If provided, will override variable: sshKey"
   default = ""
@@ -97,4 +101,28 @@ variable "admin_username" {
 variable "custom_data" {
   description = "(Optional) Specifies custom data to supply to the machine. On linux-based systems, this can be used as a cloud-init script. On other systems, this will be copied as a file on disk. Internally, Terraform will base64 encode this value before sending it to the API. The maximum length of the binary array is 65535 bytes."
   default = ""
+}
+variable "data_disk" {
+  description = "Create Virtual Machine with attached managed data disk. Default false"
+  default = "false"
+}
+variable "managed_disk_prefix" {
+  description = "Specifies the name of the managed disk. Changing this forces a new resource to be created."
+  default = "md"
+}
+variable "managed_disk_storage_account_type" {
+  description = "(Optional) The type of storage to use for the managed disk. Allowable values are Standard_LRS or Premium_LRS. Default = Standard_LRS."
+  default = "Standard_LRS"
+}
+variable "managed_disk_create_option" {
+  description = "(Optional) The method to use when creating the managed disk. Values are Import, Empty, Copy, and FromImage. Default = Empty."
+  default = "Empty"
+}
+variable "managed_disk_size_gb" {
+  description = "(Optional) Specifies the size of the os disk in gigabytes. Default 100 GB"
+  default = "100"
+}
+variable "boot_diagnostics_storage_uri" {
+  default = ""
+  description = "Blob endpoint for the storage account to hold the virtual machine's diagnostic files. This must be the root of a storage account, and not a storage container."
 }
