@@ -1,9 +1,10 @@
 output "admin_username" {
   value = "${var.admin_username}"
 }
+
 output "node_private_ips" {
   description = "private ip addresses of the vm nics"
-  value = "${split(",", local.backend_address_pool ? join(",", azurerm_network_interface.niclb.*.private_ip_address) : join(",", azurerm_network_interface.nic.*.private_ip_address))}"
+  value       = "${split(",", local.backend_address_pool ? join(",", azurerm_network_interface.niclb.*.private_ip_address) : join(",", azurerm_network_interface.nic.*.private_ip_address))}"
 }
 
 output "node_names" {

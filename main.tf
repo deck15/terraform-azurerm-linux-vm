@@ -4,8 +4,9 @@ data "azurerm_resource_group" "main" {
 }
 
 locals {
-  location = "${var.location != "" ? var.location : data.azurerm_resource_group.main.location}"
+  location            = "${var.location != "" ? var.location : data.azurerm_resource_group.main.location}"
   resource_group_name = "${data.azurerm_resource_group.main.name}"
+
   tags = "${merge(
     data.azurerm_resource_group.main.tags,
     var.tags
@@ -17,7 +18,7 @@ locals {
   nic_name = "${var.vm_nic_name != "" ? var.vm_nic_name : "${var.vm_name}-nic"}"
   key_data = "${var.admin_public_key != "" ? var.admin_public_key : file("${var.ssh_key_path}")}"
 
-  backend_address_pool = "${var.backend_address_pool_id != "" ? 1 : 0}"
+  backend_address_pool  = "${var.backend_address_pool_id != "" ? 1 : 0}"
   availability_set_name = "${var.availability_set_name != "" ? var.availability_set_name : "${var.vm_name}-avset"}"
 
   managed_disk_sha1 = "${sha1("${var.resource_group_name}${var.vm_name}")}"
@@ -36,15 +37,15 @@ resource "azurerm_availability_set" "vm" {
 }
 
 resource "azurerm_network_interface" "niclb" {
-  name      = "${local.nic_name}-${count.index}"
-  count     = "${var.use_loadbalancer ? var.node_count : 0}"
-  location  = "${local.location}"
+  name                = "${local.nic_name}-${count.index}"
+  count               = "${var.use_loadbalancer ? var.node_count : 0}"
+  location            = "${local.location}"
   resource_group_name = "${local.resource_group_name}"
 
   ip_configuration {
-    name                      = "${local.nic_name}-${count.index}-ip"
-    subnet_id                 = "${var.subnet_id}"
-    private_ip_address_allocation = "Dynamic"
+    name                                    = "${local.nic_name}-${count.index}-ip"
+    subnet_id                               = "${var.subnet_id}"
+    private_ip_address_allocation           = "Dynamic"
     load_balancer_backend_address_pools_ids = ["${var.backend_address_pool_id}"]
   }
 
@@ -52,14 +53,14 @@ resource "azurerm_network_interface" "niclb" {
 }
 
 resource "azurerm_network_interface" "nic" {
-  name      = "${local.nic_name}-${count.index}"
-  count     = "${var.use_loadbalancer ? 0 : var.node_count}"
-  location  = "${local.location}"
+  name                = "${local.nic_name}-${count.index}"
+  count               = "${var.use_loadbalancer ? 0 : var.node_count}"
+  location            = "${local.location}"
   resource_group_name = "${local.resource_group_name}"
 
   ip_configuration {
-    name                      = "${local.nic_name}-${count.index}-ip"
-    subnet_id                 = "${var.subnet_id}"
+    name                          = "${local.nic_name}-${count.index}-ip"
+    subnet_id                     = "${var.subnet_id}"
     private_ip_address_allocation = "Dynamic"
   }
 
@@ -73,8 +74,8 @@ resource "azurerm_virtual_machine" "vm" {
   resource_group_name   = "${local.resource_group_name}"
   network_interface_ids = ["${local.backend_address_pool ? element(concat(azurerm_network_interface.niclb.*.id, list("")), count.index) : element(concat(azurerm_network_interface.nic.*.id, list("")), count.index)}"]
 
-  vm_size               = "${var.vm_size}"
-  availability_set_id   = "${azurerm_availability_set.vm.id}"
+  vm_size             = "${var.vm_size}"
+  availability_set_id = "${azurerm_availability_set.vm.id}"
 
   delete_os_disk_on_termination = "${var.delete_os_disk_on_termination}"
 
@@ -95,15 +96,16 @@ resource "azurerm_virtual_machine" "vm" {
   }
 
   os_profile {
-    computer_name   = "${var.hostname != "" ? var.hostname : var.vm_name}-${count.index}"
-    admin_username  = "${var.admin_username}"
-    custom_data     = "${var.custom_data}"
+    computer_name  = "${var.hostname != "" ? var.hostname : var.vm_name}-${count.index}"
+    admin_username = "${var.admin_username}"
+    custom_data    = "${var.custom_data}"
   }
 
   os_profile_linux_config {
     disable_password_authentication = true
+
     ssh_keys {
-      path = "/home/${var.admin_username}/.ssh/authorized_keys"
+      path     = "/home/${var.admin_username}/.ssh/authorized_keys"
       key_data = "${local.key_data}"
     }
   }
@@ -117,13 +119,13 @@ resource "azurerm_virtual_machine" "vm" {
 }
 
 resource "azurerm_managed_disk" "dd" {
-  count             = "${var.data_disk == "true" ? var.node_count : 0}"
-  name              = "${format("%.22s", lower("${var.vm_name}-${local.managed_disk_name}"))}-${count.index}"
-  resource_group_name = "${local.resource_group_name}"
-  location            = "${local.location}"
-  storage_account_type= "${var.managed_disk_storage_account_type}"
-  create_option       = "${var.managed_disk_create_option}"
-  disk_size_gb        = "${var.managed_disk_size_gb}"
+  count                = "${var.data_disk == "true" ? var.node_count : 0}"
+  name                 = "${format("%.22s", lower("${var.vm_name}-${local.managed_disk_name}"))}-${count.index}"
+  resource_group_name  = "${local.resource_group_name}"
+  location             = "${local.location}"
+  storage_account_type = "${var.managed_disk_storage_account_type}"
+  create_option        = "${var.managed_disk_create_option}"
+  disk_size_gb         = "${var.managed_disk_size_gb}"
 
   tags = "${local.tags}"
 }
@@ -135,8 +137,8 @@ resource "azurerm_virtual_machine" "vmdd" {
   resource_group_name   = "${local.resource_group_name}"
   network_interface_ids = ["${local.backend_address_pool ? element(concat(azurerm_network_interface.niclb.*.id, list("")), count.index) : element(concat(azurerm_network_interface.nic.*.id, list("")), count.index)}"]
 
-  vm_size               = "${var.vm_size}"
-  availability_set_id   = "${azurerm_availability_set.vm.id}"
+  vm_size             = "${var.vm_size}"
+  availability_set_id = "${azurerm_availability_set.vm.id}"
 
   delete_os_disk_on_termination = "${var.delete_os_disk_on_termination}"
 
@@ -165,15 +167,16 @@ resource "azurerm_virtual_machine" "vmdd" {
   }
 
   os_profile {
-    computer_name   = "${var.hostname != "" ? var.hostname : var.vm_name}-${count.index}"
-    admin_username  = "${var.admin_username}"
-    custom_data     = "${var.custom_data}"
+    computer_name  = "${var.hostname != "" ? var.hostname : var.vm_name}-${count.index}"
+    admin_username = "${var.admin_username}"
+    custom_data    = "${var.custom_data}"
   }
 
   os_profile_linux_config {
     disable_password_authentication = true
+
     ssh_keys {
-      path = "/home/${var.admin_username}/.ssh/authorized_keys"
+      path     = "/home/${var.admin_username}/.ssh/authorized_keys"
       key_data = "${local.key_data}"
     }
   }
@@ -185,4 +188,3 @@ resource "azurerm_virtual_machine" "vmdd" {
 
   tags = "${local.tags}"
 }
-
